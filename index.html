@@ -1,131 +1,19 @@
+
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Карта Крыма с маппоинтами</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
-    <style>
-        #map {
-            height: 90vh;
-            width: 100%;
-        }
-        .map-point {
-            width: 20px;
-            height: 20px;
-            background-color: blue;
-            border: 2px solid white;
-            border-radius: 50%;
-            position: absolute;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-        }
-        .info-card {
-            position: absolute;
-            background-color: white;
-            padding: 20px;
-            border: 1px solid black;
-            display: none;
-            max-width: 200px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1;
-        }
-        #city-filter {
-            margin: 10px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoPost Service</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <select id="city-filter">
-        <option value="">Все города</option>
-        <option value="Simferopol">Симферополь</option>
-        <option value="Sevastopol">Севастополь</option>
-        <option value="Yalta">Ялта</option>
-        <option value="Kerch">Керчь</option>
-        <option value="Evpatoria">Евпатория</option>
-        <option value="Feodosia">Феодосия</option>
-        <option value="Alushta">Алушта</option>
-        <option value="Sudak">Судак</option>
-        <option value="Bakhchisaray">Бахчисарай</option>
-    </select>
     <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        // Инициализация карты
-        const map = L.map('map').setView([44.952116, 34.102411], 9);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            minZoom: 8,
-            bounds: [[44.0, 32.0], [46.5, 36.0]],
-        }).addTo(map);
-
-        let cityBounds = {
-            'Simferopol': L.latLngBounds([[44.89, 34.01], [45.02, 34.12]]),
-            'Sevastopol': L.latLngBounds([[44.57, 33.46], [44.72, 33.60]]),
-            'Yalta': L.latLngBounds([[44.44, 34.19], [44.54, 34.27]]),
-            'Kerch': L.latLngBounds([[45.35, 36.41], [45.40, 36.49]]),
-            'Evpatoria': L.latLngBounds([[45.19, 33.33], [45.23, 33.37]]),
-            'Feodosia': L.latLngBounds([[45.03, 35.37], [45.07, 35.43]]),
-            'Alushta': L.latLngBounds([[44.67, 34.39], [44.70, 34.42]]),
-            'Sudak': L.latLngBounds([[44.84, 34.96], [44.86, 35.04]]),
-            'Bakhchisaray': L.latLngBounds([[44.74, 33.84], [44.77, 33.91]]),
-        };
-
-        let cityCenters = {
-            'Simferopol': [44.95, 34.1],
-            'Sevastopol': [44.62, 33.54],
-            'Yalta': [44.5, 34.23],
-            'Kerch': [45.37, 36.45],
-            'Evpatoria': [45.21, 33.35],
-            'Feodosia': [45.05, 35.4],
-            'Alushta': [44.69, 34.4],
-            'Sudak': [44.85, 35.0],
-            'Bakhchisaray': [44.75, 33.87],
-        };
-
-        // Добавление маппоинтов по двойному клику
-        map.on('dblclick', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-
-            const marker = L.circleMarker([lat, lng], {
-                radius: 10,
-                color: 'white',
-                fillColor: 'blue',
-                fillOpacity: 1,
-            }).addTo(map);
-
-            const popupContent = document.createElement('div');
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Введите объявление';
-            popupContent.appendChild(input);
-
-            const button = document.createElement('button');
-            button.innerText = 'Сохранить';
-            button.onclick = function() {
-                marker.bindPopup(input.value).openPopup();
-            };
-            popupContent.appendChild(button);
-
-            marker.bindPopup(popupContent).openPopup();
-        });
-
-        // Ограничение перемещения карты по выбранному городу и масштабирование на весь Крым
-        document.getElementById('city-filter').addEventListener('change', (event) => {
-            const selectedCity = event.target.value;
-
-            if (selectedCity !== "" && cityBounds[selectedCity]) {
-                map.fitBounds(cityBounds[selectedCity]);
-                map.setMaxBounds(cityBounds[selectedCity]);
-                map.setView(cityCenters[selectedCity], 13); // Устанавливаем более точный центр города и масштаб
-            } else {
-                map.setMaxBounds([[44.0, 32.0], [46.5, 36.0]]);
-                map.setView([44.952116, 34.102411], 9); // Масштабируем на весь Крым
-            }
-        });
-    </script>
+    <div id="controls">
+        <button id="authButton">Войти / Регистрация</button>
+        <button id="addPointButton">Создать новость</button>
+        <button id="trendingButton">Что происходит?</button>
+    </div>
 </body>
 </html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Crimea Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        .download-button {
+            margin: 20px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <button class="download-button" onclick="downloadMapImage()">Download Map Image</button>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js"></script>
+    <script>
+        const map = L.map('map').setView([45.0, 34.0], 7); // Координаты Крыма
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        function downloadMapImage() {
+            const images = document.querySelectorAll('img.leaflet-tile');
+            const loadingPromises = Array.from(images).map(img => new Promise((resolve, reject) => {
+                img.addEventListener('load', () => {
+                    console.log(`Image loaded: ${img.src}`);
+                    resolve();
+                });
+                img.addEventListener('error', (error) => {
+                    console.error(`Error loading image: ${img.src}`, error);
+                    reject();
+                });
+            }));
+
+            Promise.all(loadingPromises).then(() => {
+                html2canvas(document.querySelector("#map")).then(canvas => {
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = 'crimea_map.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log('Image downloaded successfully.');
+                }).catch(error => {
+                    console.error('Error capturing screenshot:', error);
+                });
+            }).catch(error => {
+                console.error('Error loading images:', error);
+            });
+        }
+    </script>
+</body>
+</html>
