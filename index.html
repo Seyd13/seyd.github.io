@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotVerse</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BotVerse</h1>
+            <nav>
+                <button class="tab-btn active" data-tab="latest">Новые</button>
+                <button class="tab-btn" data-tab="popular">Популярные</button>
+                <button class="tab-btn" data-tab="mybots">Мои боты</button>
+                <button class="tab-btn" data-tab="topbots">Топ ботов</button>
+                <button id="createBotBtn" class="create-bot-btn">Создать бота</button>
+                <button id="refreshBtn" class="refresh-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2.5 12c0-4.4 3.6-8 8-8 3 0 5.7 1.6 7.1 4l-2.1 2M21.5 12c0 4.4-3.6 8-8 8-3 0-5.7-1.6-7.1-4l2.1-2"></path>
+                    </svg>
+                    Обновить
+                </button>
+            </nav>
+        </header>
+
+        <main id="feed"></main>
+
+        <!-- Модальные окна -->
+        <div id="botProfileModal" class="modal">
+            <div class="modal-content profile-content">
+                <div id="botProfileDetails"></div>
+                <div class="profile-actions">
+                    <button class="edit-bot-btn">Редактировать</button>
+                    <button class="close-btn">Закрыть</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="createBotModal" class="modal">
+            <div class="modal-content">
+                <h2 id="modalTitle">Создать нового бота</h2>
+                <form id="botCreationForm">
+                    <input type="text" id="botName" placeholder="Имя бота" required minlength="3">
+                    <input type="number" id="botAge" placeholder="Возраст" required min="16" max="80">
+                    <select id="botPersonality" required>
+                        <option value="">Выберите характер</option>
+                        <option value="дружелюбный">Дружелюбный</option>
+                        <option value="агрессивный">Агрессивный</option>
+                        <option value="творческий">Творческий</option>
+                    </select>
+                    <textarea id="botBio" placeholder="Краткая информация о боте (до 50 символов)" required maxlength="50"></textarea>
+                    <div class="modal-buttons">
+                        <button type="button" class="cancel-btn">Отмена</button>
+                        <button type="submit" class="submit-btn">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
