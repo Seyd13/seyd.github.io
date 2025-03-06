@@ -1,0 +1,378 @@
+<html>
+<head>
+  <title>Space Ship Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      color: white;
+      font-family: Arial;
+    }
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    #stats {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(20, 20, 35, 0.8);
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 18px;
+      min-width: 250px;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #stats-toggle {
+      position: fixed;
+      top: 90px;
+      right: 10px;
+      padding: 10px;
+      background: #444;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+
+    #stats-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
+    }
+    #shop-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 10px;
+      background: #444;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+    #shop-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
+    }
+    #inventory-btn {
+      position: fixed;
+      top: 50px;
+      right: 10px;
+      padding: 10px;
+      background: #444;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      transform-origin: center;
+    }
+    #inventory-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
+    }
+    #shop {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 20, 35, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 80vw;
+      max-height: 80vh;
+      overflow: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 20, 35, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 80vw;
+      max-height: 80vh;
+      overflow: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .modal h2 {
+      margin-top: 0;
+      color: #4a9eff;
+      font-size: 24px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: rotate(90deg);
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 15px;
+      margin: 8px;
+      background: linear-gradient(145deg, #2a2a40, #1a1a25);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid rgba(255,255,255,0.1);
+      min-width: 150px;
+    }
+
+    .chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .chip.equipped {
+      border: 2px solid #4a9eff;
+      background: linear-gradient(145deg, #2a3045, #1a2035);
+    }
+
+    .chip .name {
+      color: #4a9eff;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .stat {
+      margin: 4px 0;
+      color: #aaa;
+    }
+
+    .stat-value {
+      color: white;
+      float: right;
+    }
+
+    #merge-area {
+      margin: 20px 0;
+      padding: 20px;
+      border: 2px dashed rgba(74, 158, 255, 0.3);
+      min-height: 120px;
+      border-radius: 15px;
+      background: rgba(74, 158, 255, 0.05);
+      text-align: center;
+    }
+
+    .button {
+      padding: 12px 20px;
+      background: #4a9eff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      margin: 5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .button:hover {
+      background: #3a8eff;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+
+    .button:active::after {
+      animation: ripple 0.6s ease-out;
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(40, 40);
+        opacity: 0;
+      }
+    }
+
+    .button.secondary {
+      background: rgba(255,255,255,0.1);
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      text-align: center;
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .button.secondary:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    #inventory {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20, 20, 35, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 80vw;
+      max-height: 80vh;
+      overflow: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .section {
+      margin: 20px 0;
+    }
+
+    .section h3 {
+      color: #4a9eff;
+      margin-bottom: 15px;
+    }
+
+    #merge-info {
+      color: #aaa;
+      font-style: italic;
+      margin: 10px 0;
+    }
+    #inventory-btn {
+      position: fixed;
+      top: 50px;
+      right: 10px;
+      padding: 10px;
+      background: #444;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+
+    .ship-info {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .ship-info h3 {
+      color: #4a9eff;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+
+    .no-chip {
+      color: #666;
+      font-style: italic;
+      padding: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="stats">
+      <div>Score: <span id="score">0</span></div>
+      <div>Credits: <span id="credits">0</span></div>
+      <div class="ship-info">
+        <h3>Ship Stats</h3>
+        <div id="ship-stats"></div>
+        <h3>Equipped Chip</h3>
+        <div id="equipped-display"></div>
+      </div>
+    </div>
+    <button id="stats-toggle">Hide Stats</button>
+    <button id="shop-btn">Shop</button>
+    <button id="inventory-btn">Inventory</button>
+  </div>
+
+  <div id="shop" class="modal">
+    <button class="close-btn" id="close-shop">✕</button>
+    <h2>Chip Shop</h2>
+    <div id="chip-container"></div>
+  </div>
+
+  <div id="inventory" class="modal">
+    <button class="close-btn" id="close-inventory">✕</button>
+    <h2>Inventory</h2>
+    
+    <div class="section">
+      <h3>Equipped Chip</h3>
+      <div id="equipped-chip"></div>
+    </div>
+
+    <div class="section">
+      <h3>Available Chips</h3>
+      <div id="inventory-chips"></div>
+    </div>
+
+    <div class="section">
+      <h3>Merge Laboratory</h3>
+      <div id="merge-info">Select two chips to merge them into a new one. Results are unpredictable!</div>
+      <div id="merge-area" ondrop="handleDrop(event)" ondragover="event.preventDefault()"></div>
+      <div class="merge-controls">
+        <button id="merge-btn" class="button" style="display: none;">Generate New Chip</button>
+        <button id="clear-merge-btn" class="button secondary">Clear Merge Area</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function handleDrop(event) {
+      event.preventDefault();
+      const chipId = event.dataTransfer.getData('chipId');
+      window.game.addChipToMergeArea(chipId);
+    }
+  </script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
