@@ -2,11 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VOXLoader } from 'three/addons/loaders/VOXLoader.js';
 
-document.querySelectorAll('button, .tab-btn, .chip-item').forEach(element => {
-    element.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Предотвращаем стандартное поведение
-    }, { passive: false });
-});
+
 
 function enterFullscreen() {
     const elem = document.documentElement;
