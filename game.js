@@ -4,6 +4,7 @@ import { VOXLoader } from 'three/addons/loaders/VOXLoader.js';
 
 // Game state
 const gameState = {
+    isMerging: false,
     money: 1000,
     incomePerSecond: 0,
     language: 'ru',
@@ -27,9 +28,9 @@ const gameState = {
 // Language translations
 const translations = {
     ru: {
-        'chips': 'Чипы',
-        'shop': 'Магазин',
-        'merge': 'Синтез',
+        'chips': 'Чипы 🔲',
+        'shop': 'Магазин 🛒',
+        'merge': 'Синтез 💥',
         'installed-chips': 'Установленные чипы',
         'basic-chips': 'Базовые чипы',
         'merge-chips': 'Синтез чипов',
@@ -55,6 +56,7 @@ const translations = {
         'chip-name': 'Чип #{id}',
         'no-chips-installed': 'Нет установленных чипов',
         'empty-inventory': 'Инвентарь пуст',
+        'chip-in-merge-slot': 'Чип находится в слоте для синтеза и не может быть установлен',
         'remove': 'Снять',
         'chip-installed': 'Чип установлен!',
         'chip-removed': 'Чип снят с компьютера',
@@ -83,9 +85,9 @@ const translations = {
         'help': 'Помощь',
     },
     en: {
-        'chips': 'Chips',
-        'shop': 'Shop',
-        'merge': 'Merge',
+        'chips': 'Chips 🔲',
+        'shop': 'Shop 🛒',
+        'merge': 'Merge 💥',
         'installed-chips': 'Installed Chips',
         'basic-chips': 'Basic Chips',
         'merge-chips': 'Merge Chips',
@@ -111,6 +113,7 @@ const translations = {
         'chip-name': 'Chip #{id}',
         'no-chips-installed': 'No chips installed',
         'empty-inventory': 'Inventory is empty',
+        'chip-in-merge-slot': 'The chip is in the synthesis slot and cannot be installed',
         'remove': 'Remove',
         'chip-installed': 'Chip installed!',
         'chip-removed': 'Chip removed from computer',
@@ -375,7 +378,7 @@ function addComputerDetails() {
     backPanel.position.set(0, 0, -1.025);
     computerModel.add(backPanel);
     
-    const fanGrillGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.05, 16);
+    /*const fanGrillGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.05, 16);
     const fanGrillMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x111111,
         wireframe: true
@@ -384,7 +387,7 @@ function addComputerDetails() {
     const fanGrill = new THREE.Mesh(fanGrillGeometry, fanGrillMaterial);
     fanGrill.rotation.x = Math.PI / 2;
     fanGrill.position.set(-0.7, 0, -1.05);
-    computerModel.add(fanGrill);
+    computerModel.add(fanGrill);*/
 }
 
 // Add computer running effects
@@ -476,7 +479,7 @@ function createChip(options = {}) {
 function createShopChip(type) {
     if (type === 'basic') {
         const basePrice = 100;
-        const priceMultiplier = Math.pow(1.3, gameState.basicChipPurchases); 
+        const priceMultiplier = Math.pow(1.1, gameState.basicChipPurchases); 
         const price = Math.floor(basePrice * priceMultiplier);
         
         return {
@@ -578,7 +581,6 @@ function updateInstalledChips() {
 function updateInventoryChips() {
     const inventoryChipsContainer = document.getElementById('inventory-chips');
     inventoryChipsContainer.innerHTML = '';
-    
     if (gameState.inventoryChips.length === 0) {
         const emptyMessage = document.createElement('div');
         emptyMessage.classList.add('empty-message');
@@ -586,11 +588,17 @@ function updateInventoryChips() {
         inventoryChipsContainer.appendChild(emptyMessage);
         return;
     }
-    
     const sortedChips = [...gameState.inventoryChips].sort((a, b) => b.income - a.income);
-    
     sortedChips.forEach(chip => {
         const chipElement = createChipElement(chip);
+        
+        // Добавляем проверку на чипы в слотах слияния
+        if (gameState.mergeSlots.some(slotChip => slotChip && slotChip.id === chip.id)) {
+            chipElement.classList.add('disabled-chip');
+            chipElement.style.pointerEvents = 'none';
+            chipElement.style.opacity = '0.5';
+        }
+        
         inventoryChipsContainer.appendChild(chipElement);
     });
 }
@@ -675,17 +683,13 @@ function updateMergeSlots() {
     for (let slotIndex = 0; slotIndex < 2; slotIndex++) {
         const slotElement = document.getElementById(`merge-slot-${slotIndex + 1}`);
         const chip = gameState.mergeSlots[slotIndex];
-        
         slotElement.innerHTML = '';
         slotElement.classList.remove('has-chip');
-        
         if (chip) {
             slotElement.classList.add('has-chip');
-            
             const chipPreview = document.createElement('div');
             chipPreview.classList.add('chip-preview', chip.rarity);
             chipPreview.style.backgroundColor = chip.color;
-            
             const chipIcon = document.createElement('div');
             chipIcon.classList.add('chip-icon');
             const emblemColor = getEmblemColorByRarity(chip.rarity);
@@ -699,21 +703,17 @@ function updateMergeSlots() {
                 <line x1="70" y1="50" x2="85" y2="50" stroke="${emblemColor}" stroke-width="4" />
             </svg>`;
             chipPreview.appendChild(chipIcon);
-            
             slotElement.appendChild(chipPreview);
         } else {
             const placeholder = document.createElement('div');
             placeholder.classList.add('merge-placeholder');
             placeholder.textContent = translate('drop-chip');
-            
             slotElement.appendChild(placeholder);
         }
     }
-    
     const mergeInventoryContainer = document.getElementById('merge-inventory-chips');
     if (mergeInventoryContainer) {
         mergeInventoryContainer.innerHTML = '';
-        
         if (gameState.inventoryChips.length === 0) {
             const emptyMessage = document.createElement('div');
             emptyMessage.classList.add('empty-message');
@@ -721,11 +721,17 @@ function updateMergeSlots() {
             mergeInventoryContainer.appendChild(emptyMessage);
             return;
         }
-        
         const sortedChips = [...gameState.inventoryChips].sort((a, b) => a.income - b.income);
-        
         sortedChips.forEach(chip => {
             const chipElement = createChipElement(chip);
+            
+            // Добавляем проверку на установленный чип
+            if (gameState.installedChips.some(installedChip => installedChip.id === chip.id)) {
+                chipElement.classList.add('disabled-chip');
+                chipElement.style.pointerEvents = 'none';
+                chipElement.style.opacity = '0.5';
+            }
+            
             mergeInventoryContainer.appendChild(chipElement);
         });
     }
@@ -733,6 +739,12 @@ function updateMergeSlots() {
 
 // Select a chip for merging
 function selectChipForMerge(chip) {
+    // Проверяем, установлен ли чип
+    if (gameState.installedChips.some(installedChip => installedChip.id === chip.id)) {
+        showToast(translate('chip-installed-cant-merge'), 'info');
+        return;
+    }
+    
     let slotIndex = -1;
     if (!gameState.mergeSlots[0]) {
         slotIndex = 0;
@@ -741,17 +753,14 @@ function selectChipForMerge(chip) {
     } else {
         slotIndex = 0;
     }
-    
     const existingSlotIndex = gameState.mergeSlots.findIndex(slotChip => slotChip && slotChip.id === chip.id);
     if (existingSlotIndex !== -1) {
         gameState.mergeSlots[existingSlotIndex] = null;
         updateMergeSlots();
         return;
     }
-    
     gameState.mergeSlots[slotIndex] = chip;
     updateMergeSlots();
-    
     const mergeBtn = document.getElementById('merge-btn');
     mergeBtn.disabled = !(gameState.mergeSlots[0] && gameState.mergeSlots[1]);
 }
@@ -810,32 +819,26 @@ function showChipDetails(chip, isInstalled) {
 
 // Install a chip from inventory
 function installChip(chip) {
+    // Проверяем, находится ли чип в слотах для слияния
+    if (gameState.mergeSlots.some(slotChip => slotChip && slotChip.id === chip.id)) {
+        showToast(translate('chip-in-merge-slot'), 'info');
+        return;
+    }
+    
     if (gameState.installedChips.length >= gameState.maxInstalledChips) {
         const chipToRemove = gameState.installedChips[0];
-        
         gameState.installedChips = [];
-        
         gameState.inventoryChips.push(chipToRemove);
-        
         showToast(translate('chip-removed'), 'info');
     }
-
     gameState.inventoryChips = gameState.inventoryChips.filter(c => c.id !== chip.id);
-    
     gameState.installedChips.push(chip);
-    
     recalculateIncome();
-    
     updateUI();
-    
     updateInstalledChipsVisual(computerModel.userData.chipSlots);
-    
     updateComputerRunningState();
-    
     animateChipInstallation(chip);
-    
     showToast(translate('chip-installed'), 'success');
-    
     closePopup();
 }
 
@@ -1179,7 +1182,7 @@ function buyChip(type) {
             gameState.basicChipPurchases++;
             
             const basicChipPrice = document.querySelector('.shop-chip[data-type="basic"] .chip-price');
-            const newPrice = 100 * Math.pow(1.3, gameState.basicChipPurchases); 
+            const newPrice = 100 * Math.pow(1.1, gameState.basicChipPurchases); 
             basicChipPrice.textContent = `$${formatNumber(Math.floor(newPrice))}`;
         }
     } else {
@@ -1195,47 +1198,46 @@ function buyChip(type) {
 
 // Perform chip merge
 function performMerge() {
+    if(gameState.isMerging) return; // Блокируем повторные нажатия
+    
+    gameState.isMerging = true; // Устанавливаем флаг слияния
     const chip1 = gameState.mergeSlots[0];
     const chip2 = gameState.mergeSlots[1];
     
-    if (!chip1 || !chip2) return;
+    if (!chip1 || !chip2) {
+        gameState.isMerging = false;
+        return;
+    }
     
     const rarityCostMultiplier = [1, 3, 10, 30]; 
     const rarity1Multiplier = rarityCostMultiplier[chip1.rarityIndex] || 1;
     const rarity2Multiplier = rarityCostMultiplier[chip2.rarityIndex] || 1;
-    
     const mergeCost = Math.floor((chip1.power + chip2.power) * 0.2 * (rarity1Multiplier + rarity2Multiplier));
     
     if (gameState.money < mergeCost) {
         showToast(translate('not-enough-money').replace('{amount}', formatNumber(mergeCost)), 'error');
-        
         const moneyValue = document.getElementById('money-value');
         moneyValue.classList.add('shake-animation');
         setTimeout(() => {
             moneyValue.classList.remove('shake-animation');
         }, 500);
-        
+        gameState.isMerging = false;
         return;
     }
     
     createMoneySpendParticles(mergeCost);
-    
     gameState.money -= mergeCost;
     
     animateMerge(chip1, chip2, () => {
         const newChip = mergeChips(chip1, chip2);
-        
         gameState.inventoryChips = gameState.inventoryChips.filter(chip => 
             chip.id !== chip1.id && chip.id !== chip2.id
         );
-        
         gameState.inventoryChips.push(newChip);
-        
         gameState.mergeSlots = [null, null];
-        
         updateUI();
-        
         showMergeResult(newChip);
+        gameState.isMerging = false; // Снимаем флаг после завершения
     });
 }
 
