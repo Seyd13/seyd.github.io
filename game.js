@@ -2,6 +2,27 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VOXLoader } from 'three/addons/loaders/VOXLoader.js';
 
+document.querySelectorAll('button, .tab-btn, .chip-item').forEach(element => {
+    element.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Предотвращаем стандартное поведение
+    }, { passive: false });
+});
+
+function enterFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) { // Firefox
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) { // Chrome, Safari and Opera
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { // IE/Edge
+        elem.msRequestFullscreen();
+    }
+}
+
+// Вызовите эту функцию при загрузке страницы
+window.onload = enterFullscreen;
 // Game state
 const gameState = {
     isMerging: false,
