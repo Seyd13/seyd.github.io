@@ -29,6 +29,7 @@ let markers = [];
 let markersMap = {};
 let activeFilter = 'all';
 let settings = null;
+let previousMapState = null; // Для хранения состояния карты перед открытием карточки
 
 async function initApp() {
     initMap();
@@ -72,10 +73,10 @@ function initMap() {
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: ''
     }).addTo(newsMap);
 
-    newsMap.setMaxBounds(MAP_CONFIG.bounds); // Устанавливаем базовые границы
+    newsMap.setMaxBounds(MAP_CONFIG.bounds);
 }
 
 function initLocationMap() {
@@ -86,7 +87,9 @@ function initLocationMap() {
         maxBounds: MAP_CONFIG.bounds,
         maxBoundsViscosity: 1.0
     });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(locationMap);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: ''
+    }).addTo(locationMap);
     locationMarker = L.marker(newsMap.getCenter(), {
         draggable: true,
         icon: L.divIcon({
@@ -182,7 +185,7 @@ function setupEventListeners() {
     newsTextArea.addEventListener('input', () => charCount.textContent = newsTextArea.value.length);
     publishNewsBtn.addEventListener('click', handlePublishNews);
     window.addEventListener('click', e => {
-        if (e.target.classList.contains('modal')) {
+        if (e.target.classList.contains('modal') && !e.target.classList.contains('news-card-modal')) {
             e.target.style.display = 'none';
             if (e.target.id === 'add-news-modal' && locationMap) {
                 locationMap.remove();
@@ -191,17 +194,11 @@ function setupEventListeners() {
                 publishNewsBtn.textContent = 'Опубликовать';
             }
         }
-    });
-    document.getElementById('news-category').addEventListener('change', toggleImageUpload);
-    document.addEventListener('click', e => {
-        if (e.target.classList.contains('share-btn')) {
-            const newsId = e.target.dataset.newsId;
-            const shareUrl = `${window.location.origin}${window.location.pathname}?news=${newsId}`;
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('Ссылка скопирована в буфер обмена');
-            });
+        if (e.target.classList.contains('news-card-modal')) {
+            closeNewsCardModal(e.target);
         }
     });
+    document.getElementById('news-category').addEventListener('change', toggleImageUpload);
     addressInput.addEventListener('input', handleAddressInput);
 }
 
@@ -413,6 +410,13 @@ async function handlePublishNews() {
         }
 
         const position = locationMarker.getLatLng();
+        if (!isWithinBounds(position)) {
+            alert('Выбранное местоположение находится за пределами Крыма');
+            publishNewsBtn.disabled = false;
+            publishNewsBtn.textContent = 'Опубликовать';
+            return;
+        }
+
         let imageUrl = null;
 
         if (file && (category === 'stories' || category === 'services')) {
@@ -531,7 +535,7 @@ async function publishNews(category, text, position, imageUrl, newStoriesCount =
             if (profile) newsWithProfile.profiles.display_name = profile.display_name;
         }
         addMarker(newsWithProfile);
-        newsMap.setView([position.lat, position.lng], 14);
+        newsMap.flyTo([position.lat, position.lng], 10, { duration: 0.5 });
 
         addNewsModal.style.display = 'none';
         if (locationMap) {
@@ -599,107 +603,111 @@ function addMarker(news) {
         className: `marker-icon marker-${news.category} ${!isNewsViewed(news.id) ? 'unviewed' : ''}`,
         html: `<div style="background-color: ${categoryConfig.color}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px;">${categoryConfig.icon}</div>`,
         iconSize: [30, 30],
-        iconAnchor: [15, 15],
-        popupAnchor: [0, -15]
+        iconAnchor: [15, 15]
     });
     const marker = L.marker([news.lat, news.lng], { icon }).addTo(newsMap);
     markers.push(marker);
     markersMap[news.id] = marker;
     marker.news = news;
     marker.category = news.category;
+
+    marker.on('click', () => showNewsCard(news));
+}
+
+function showNewsCard(news) {
+    const existingModal = document.querySelector('.news-card-modal');
+    if (existingModal) existingModal.remove();
+
+    // Сохраняем текущее состояние карты перед зумом
+    previousMapState = {
+        center: newsMap.getCenter(),
+        zoom: newsMap.getZoom()
+    };
+
+    // Плавный зум к маркеру
+    newsMap.flyTo([news.lat, news.lng], 14, { duration: 1 });
+
+    const modal = document.createElement('div');
+    modal.className = 'news-card-modal';
+    const categoryConfig = CATEGORIES[news.category];
     const authorName = news.profiles.display_name || 'Неизвестно';
     const isAuthor = currentUser && currentUser.id === news.user_id;
     const deleteButton = isAuthor ? `<button class="delete-btn" data-news-id="${news.id}">Удалить</button>` : '';
-    const popupContent = `
-        <div class="news-popup">
-            <div class="category">${categoryConfig.name}</div>
-            <div class="address">Загрузка адреса...</div>
-            ${news.image_url ? `<img src="${news.image_url}" alt="News image" style="max-width: 100%; margin-bottom: 10px; height: 150px;">` : ''}
-            <div class="text">${news.text}</div>
-            <div class="meta">
-                <span class="author">Автор: ${authorName}</span>
-                <span class="views">Просмотры: ${news.views || 0}</span>
-                <button class="share-btn" data-news-id="${news.id}">Поделиться</button>
-                ${deleteButton}
+
+    modal.innerHTML = `
+        <span class="close" title="Закрыть">×</span>
+        <div class="news-card">
+            ${news.image_url ? `<img src="${news.image_url}" alt="News image">` : ''}
+            <div class="content">
+                <div class="category">${categoryConfig.name}</div>
+                <div class="text">${news.text}</div>
+                <div class="address">Загрузка адреса...</div>
+                <div class="meta">
+                    <span class="author">Автор: ${authorName}</span>
+                    <span class="views">Просмотры: ${news.views || 0}</span>
+                    <button class="share-btn" data-news-id="${news.id}">Поделиться</button>
+                    ${deleteButton}
+                </div>
             </div>
         </div>
     `;
-    marker.bindPopup(popupContent);
+
+    document.body.appendChild(modal);
+    modal.classList.add('active');
+
     getAddress(news.lat, news.lng).then(address => {
-        const popup = marker.getPopup();
-        if (popup) {
-            const content = popup.getContent().replace('Загрузка адреса...', address);
-            popup.setContent(content);
-        }
+        modal.querySelector('.address').textContent = address;
     });
-    marker.on('popupopen', async () => {
-        if (newsMap.getZoom() === MAP_CONFIG.minZoom) {
-            const popupElement = document.querySelector('.leaflet-popup');
-            if (popupElement) {
-                // Вычисляем высоту попапа
-                const popupHeight = popupElement.getBoundingClientRect().height;
-                const mapHeight = mapContainer.getBoundingClientRect().height;
 
-                // Вычисляем координаты маркера
-                const markerLatLng = marker.getLatLng();
+    if (!isNewsViewed(news.id)) {
+        updateNewsViews(news.id, news.views);
+        const viewedNews = JSON.parse(localStorage.getItem('viewedNews') || '[]');
+        viewedNews.push(news.id);
+        localStorage.setItem('viewedNews', JSON.stringify(viewedNews));
+        markersMap[news.id].setIcon(L.divIcon({
+            className: `marker-icon marker-${news.category}`,
+            html: `<div style="background-color: ${categoryConfig.color}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px;">${categoryConfig.icon}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        }));
+    }
 
-                // Смещаем координаты вверх на половину высоты попапа
-                const offsetLat = popupHeight / 2 / Math.pow(2, newsMap.getZoom()); // Переводим пиксели в широту
-                const adjustedLatLng = [markerLatLng.lat + offsetLat, markerLatLng.lng];
+    modal.querySelector('.share-btn').addEventListener('click', () => {
+        const shareUrl = `${window.location.origin}${window.location.pathname}?news=${news.id}`;
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            alert('Ссылка скопирована в буфер обмена');
+        });
+    });
 
-                // Расширяем верхнюю границу временно
-                const extendedBounds = [
-                    [MAP_CONFIG.bounds[0][0] + 0.5, MAP_CONFIG.bounds[0][1]], // Увеличиваем верхнюю границу на 0.5 градуса
-                    MAP_CONFIG.bounds[1]
-                ];
-                newsMap.setMaxBounds(extendedBounds);
-
-                // Приближаем карту с учетом смещения
-                newsMap.setView(adjustedLatLng, MAP_CONFIG.minZoom + 1);
-
-                // После открытия попапа можно вручную двигать карту вверх
-            } else {
-                newsMap.setView(marker.getLatLng(), MAP_CONFIG.minZoom + 1);
+    if (isAuthor) {
+        modal.querySelector('.delete-btn').addEventListener('click', () => {
+            if (confirm('Вы уверены, что хотите удалить эту публикацию?')) {
+                handleDeleteNews(news.id, modal);
             }
-        }
-        if (!isNewsViewed(news.id)) {
-            try {
-                const { error } = await supabase.from('news').update({ views: (news.views || 0) + 1 }).eq('id', news.id);
-                if (!error) {
-                    news.views++;
-                    const popup = marker.getPopup();
-                    popup.setContent(popup.getContent().replace(`Просмотры: ${news.views - 1}`, `Просмотры: ${news.views}`));
-                }
-                const viewedNews = JSON.parse(localStorage.getItem('viewedNews') || '[]');
-                viewedNews.push(news.id);
-                localStorage.setItem('viewedNews', JSON.stringify(viewedNews));
-                marker.setIcon(L.divIcon({
-                    className: `marker-icon marker-${news.category}`,
-                    html: `<div style="background-color: ${categoryConfig.color}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px;">${categoryConfig.icon}</div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15],
-                    popupAnchor: [0, -15]
-                }));
-            } catch (error) {
-                console.error('Ошибка обновления просмотров:', error.message);
-            }
-        }
-        const deleteBtn = document.querySelector(`.delete-btn[data-news-id="${news.id}"]`);
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => {
-                if (confirm('Вы уверены, что хотите удалить эту публикацию?')) {
-                    handleDeleteNews(news.id);
-                }
-            });
-        }
-    });
-    marker.on('popupclose', () => {
-        // Восстанавливаем исходные границы после закрытия попапа
-        newsMap.setMaxBounds(MAP_CONFIG.bounds);
-    });
+        });
+    }
+
+    modal.querySelector('.close').addEventListener('click', () => closeNewsCardModal(modal));
 }
 
-async function handleDeleteNews(newsId) {
+async function updateNewsViews(newsId, currentViews) {
+    try {
+        const { error } = await supabase
+            .from('news')
+            .update({ views: (currentViews || 0) + 1 })
+            .eq('id', newsId);
+        if (error) throw error;
+        const viewsElement = document.querySelector(`.news-card-modal .views`);
+        if (viewsElement) {
+            viewsElement.textContent = `Просмотры: ${(currentViews || 0) + 1}`;
+        }
+        markersMap[newsId].news.views = (currentViews || 0) + 1;
+    } catch (error) {
+        console.error('Ошибка обновления просмотров:', error.message);
+    }
+}
+
+async function handleDeleteNews(newsId, modal) {
     if (!currentUser) {
         alert('Авторизуйтесь для удаления');
         showAuthModal();
@@ -715,10 +723,26 @@ async function handleDeleteNews(newsId) {
         newsMap.removeLayer(markersMap[newsId]);
         delete markersMap[newsId];
         markers = markers.filter(m => m.news.id !== newsId);
+        modal.remove();
+        if (previousMapState) {
+            newsMap.flyTo(previousMapState.center, previousMapState.zoom, { duration: 1 });
+            previousMapState = null;
+        }
     } catch (error) {
         console.error('Ошибка удаления:', error.message);
         alert('Ошибка при удалении публикации: ' + error.message);
     }
+}
+
+function closeNewsCardModal(modal) {
+    modal.classList.remove('active');
+    setTimeout(() => {
+        modal.remove();
+        if (previousMapState) {
+            newsMap.flyTo(previousMapState.center, previousMapState.zoom, { duration: 1 });
+            previousMapState = null;
+        }
+    }, 300); // Совпадает с длительностью transition в CSS
 }
 
 function clearMarkers() {
@@ -748,8 +772,8 @@ function checkUrlForNews() {
     const newsId = urlParams.get('news');
     if (newsId && markersMap[newsId]) {
         const marker = markersMap[newsId];
-        newsMap.setView(marker.getLatLng(), 14);
-        marker.openPopup();
+        newsMap.flyTo(marker.getLatLng(), 14, { duration: 1 });
+        showNewsCard(marker.news);
     }
 }
 
@@ -761,7 +785,7 @@ async function handleAddressInput() {
         return;
     }
     try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&bounded=1&viewbox=32.5,46.2,36.6,44.3`);
         const data = await response.json();
         suggestionsContainer.innerHTML = '';
         data.forEach(item => {
@@ -826,6 +850,11 @@ async function checkPendingPayment() {
     if (pendingPaymentId && currentUser) {
         await checkPaymentStatus(pendingPaymentId, currentUser.id);
     }
+}
+
+function isWithinBounds(position) {
+    const bounds = L.latLngBounds(MAP_CONFIG.bounds);
+    return bounds.contains(position);
 }
 
 document.addEventListener('DOMContentLoaded', initApp);
