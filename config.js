@@ -10,7 +10,7 @@ export const MAP_CONFIG = {
 };
 
 export const CATEGORIES = {
-    stories: { name: "Истории", icon: "📝", color: "#4CAF50" },
-    jobs: { name: "Работа", icon: "💼", color: "#2196F3" },
-    services: { name: "Услуги", icon: "🔧", color: "#FF9800" }
+    stories: { name: "Истории", icon: "./stories.png", color: "#4CAF50" },
+    jobs: { name: "Работа", icon: "./jobs.png", color: "#2196F3" },
+    services: { name: "Услуги", icon: "./services.png", color: "#FF9800" }
 };

@@ -72,24 +72,26 @@
 
     <div id="add-news-modal" class="modal">
         <div class="modal-content">
-            <span class="close" title="Закрыть">×</span>
             <h2>Добавить новость</h2>
             <select id="news-category">
+                <option value="">Выберите категорию</option>
                 <option value="stories">Истории</option>
                 <option value="jobs">Работа</option>
                 <option value="services">Услуги</option>
             </select>
-            <textarea id="news-text" maxlength="280" placeholder="Текст новости (макс. 280 символов)"></textarea>
-            <p>Символов: <span id="char-count">0</span>/280</p>
-            <div id="image-upload" style="display: block;">
-                <label for="news-image">Прикрепить изображение</label>
-                <input type="file" id="news-image" accept="image/*">
+            <div id="news-form" style="display: none;">
+                <textarea id="news-text" maxlength="280" placeholder="Текст новости (макс. 280 символов)"></textarea>
+                <p>Символов: <span id="char-count">0</span>/280</p>
+                <input type="text" id="contacts-input" placeholder="Контакты">
+                <div id="image-upload" style="display: block;">
+                    <label for="news-image" class="upload-btn">Загрузить изображение</label>
+                    <input type="file" id="news-image" accept="image/*" style="display: none;">
+                </div>
+                <p>Переместите зеленую стрелку для выбора местоположения</p>
+                <div id="location-map" class="mini-map"></div>
+                <button id="publish-news-btn" title="Опубликовать новость">Опубликовать</button>
             </div>
-            <input type="text" id="address-input" placeholder="Введите адрес">
-            <div id="address-suggestions" class="suggestions"></div>
-            <p>Переместите зеленую стрелку для выбора местоположения</p>
-            <div id="location-map" class="mini-map"></div>
-            <button id="publish-news-btn" title="Опубликовать новость">Опубликовать</button>
+            <button class="close-btn">Закрыть</button>
         </div>
     </div>
 

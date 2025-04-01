@@ -18,7 +18,9 @@ const newsTextArea = document.getElementById('news-text');
 const charCount = document.getElementById('char-count');
 const publishNewsBtn = document.getElementById('publish-news-btn');
 const logoutBtn = document.getElementById('logout-btn');
-const addressInput = document.getElementById('address-input');
+const newsCategorySelect = document.getElementById('news-category');
+const newsForm = document.getElementById('news-form');
+const contactsInput = document.getElementById('contacts-input');
 
 // App state
 let currentUser = null;
@@ -29,7 +31,7 @@ let markers = [];
 let markersMap = {};
 let activeFilter = 'all';
 let settings = null;
-let previousMapState = null; // Для хранения состояния карты перед открытием карточки
+let previousMapState = null;
 
 async function initApp() {
     initMap();
@@ -198,8 +200,10 @@ function setupEventListeners() {
             closeNewsCardModal(e.target);
         }
     });
-    document.getElementById('news-category').addEventListener('change', toggleImageUpload);
-    addressInput.addEventListener('input', handleAddressInput);
+    newsCategorySelect.addEventListener('change', () => {
+        toggleNewsForm();
+        toggleImageUpload();
+    });
 }
 
 function showAuthModal() { authModal.style.display = 'block'; }
@@ -210,11 +214,22 @@ function showAddNewsModal() {
         return;
     }
     addNewsModal.style.display = 'block';
-    document.getElementById('news-category').value = 'stories';
-    document.getElementById('news-text').value = '';
+    newsCategorySelect.value = '';
+    newsForm.style.display = 'none';
+    newsTextArea.value = '';
     charCount.textContent = '0';
+    contactsInput.value = '';
     toggleImageUpload();
-    setTimeout(() => initLocationMap(), 100);
+}
+
+function toggleNewsForm() {
+    const category = newsCategorySelect.value;
+    if (category) {
+        newsForm.style.display = 'block';
+        setTimeout(() => initLocationMap(), 100);
+    } else {
+        newsForm.style.display = 'none';
+    }
 }
 
 async function showProfileModal() {
@@ -228,8 +243,7 @@ async function showProfileModal() {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !sessionData.session || sessionData.session.user.id !== currentUser.id) {
             console.error('Сессия недействительна:', sessionError?.message || 'Нет активной сессии');
-            currentUser = null;
-            updateUIForLoggedOutUser();
+            await handleLogout();
             showAuthModal();
             return;
         }
@@ -294,7 +308,7 @@ async function showProfileModal() {
 }
 
 async function handleLogin() {
-    const email = document.getElementById('login-email').value;
+    const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const errorElement = document.getElementById('login-error');
 
@@ -312,18 +326,23 @@ async function handleLogin() {
         errorElement.textContent = '';
     } catch (error) {
         console.error('Ошибка входа:', error.message);
-        errorElement.textContent = error.message;
+        errorElement.textContent = error.message === 'Invalid login credentials' ? 'Неверный email или пароль' : error.message;
     }
 }
 
 async function handleRegister() {
-    const email = document.getElementById('register-email').value;
+    const email = document.getElementById('register-email').value.trim();
     const password = document.getElementById('register-password').value;
-    const displayName = document.getElementById('register-display-name').value;
+    const displayName = document.getElementById('register-display-name').value.trim();
     const errorElement = document.getElementById('register-error');
 
     if (!email || !password || !displayName) {
         errorElement.textContent = 'Введите все данные';
+        return;
+    }
+
+    if (password.length < 6) {
+        errorElement.textContent = 'Пароль должен содержать минимум 6 символов';
         return;
     }
 
@@ -340,7 +359,7 @@ async function handleRegister() {
             return;
         }
         currentUser = data.user;
-        await supabase.from('profiles').insert({ id: currentUser.id, display_name: displayName });
+        await supabase.from('profiles').upsert({ id: currentUser.id, display_name: displayName });
         authModal.style.display = 'none';
         updateUIForLoggedInUser();
         alert('Регистрация успешна! Вы можете начать использовать приложение.');
@@ -358,9 +377,10 @@ async function handleLogout() {
         currentUser = null;
         updateUIForLoggedOutUser();
         profileModal.style.display = 'none';
+        localStorage.removeItem('viewedNews');
     } catch (error) {
         console.error('Ошибка выхода:', error.message);
-        alert('Ошибка при выхода: ' + error.message);
+        alert('Ошибка при выходе: ' + error.message);
     }
 }
 
@@ -375,9 +395,7 @@ async function handlePublishNews() {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !sessionData.session || sessionData.session.user.id !== currentUser.id) {
             console.error('Сессия недействительна:', sessionError?.message || 'Нет активной сессии');
-            currentUser = null;
-            updateUIForLoggedOutUser();
-            alert('Ошибка: сессия недействительна, пожалуйста, войдите снова');
+            await handleLogout();
             showAuthModal();
             return;
         }
@@ -385,11 +403,18 @@ async function handlePublishNews() {
         publishNewsBtn.disabled = true;
         publishNewsBtn.textContent = 'Публикация...';
 
-        const category = document.getElementById('news-category').value;
-        const text = document.getElementById('news-text').value.trim();
+        const category = newsCategorySelect.value;
+        const text = newsTextArea.value.trim();
+        const contacts = contactsInput.value.trim();
         const imageInput = document.getElementById('news-image');
         const file = imageInput?.files[0];
 
+        if (!category) {
+            alert('Выберите категорию');
+            publishNewsBtn.disabled = false;
+            publishNewsBtn.textContent = 'Опубликовать';
+            return;
+        }
         if (!text) {
             alert('Введите текст новости');
             publishNewsBtn.disabled = false;
@@ -461,13 +486,13 @@ async function handlePublishNews() {
                 publishNewsBtn.textContent = 'Опубликовать';
                 return;
             }
-            await publishNews(category, text, position, imageUrl, limitData.stories_free_count - 1);
+            await publishNews(category, text, position, imageUrl, limitData.stories_free_count - 1, contacts);
         } else {
             const cost = category === 'jobs' ? (settings.jobs_cost || 100) : (settings.services_cost || 500);
             showPaymentModal(category, cost, async () => {
                 const paymentSuccess = await initiatePayment(currentUser.id, category, cost);
                 if (paymentSuccess) {
-                    await publishNews(category, text, position, imageUrl);
+                    await publishNews(category, text, position, imageUrl, null, contacts);
                 } else {
                     alert('Платеж не удался');
                     publishNewsBtn.disabled = false;
@@ -483,7 +508,7 @@ async function handlePublishNews() {
     }
 }
 
-async function publishNews(category, text, position, imageUrl, newStoriesCount = null) {
+async function publishNews(category, text, position, imageUrl, newStoriesCount = null, contacts) {
     try {
         const expiresAt = new Date();
         if (category === 'stories') {
@@ -500,7 +525,8 @@ async function publishNews(category, text, position, imageUrl, newStoriesCount =
             user_id: currentUser.id,
             views: 0,
             image_url: imageUrl,
-            expires_at: expiresAt.toISOString()
+            expires_at: expiresAt.toISOString(),
+            contacts: contacts || null
         };
 
         const { data: insertedNews, error: insertError } = await supabase
@@ -535,7 +561,7 @@ async function publishNews(category, text, position, imageUrl, newStoriesCount =
             if (profile) newsWithProfile.profiles.display_name = profile.display_name;
         }
         addMarker(newsWithProfile);
-        newsMap.flyTo([position.lat, position.lng], 10, { duration: 0.5 });
+        newsMap.flyTo([position.lat, position.lng], 14, { duration: 1 });
 
         addNewsModal.style.display = 'none';
         if (locationMap) {
@@ -599,11 +625,11 @@ function isNewsViewed(newsId) {
 
 function addMarker(news) {
     const categoryConfig = CATEGORIES[news.category];
-    const icon = L.divIcon({
-        className: `marker-icon marker-${news.category} ${!isNewsViewed(news.id) ? 'unviewed' : ''}`,
-        html: `<div style="background-color: ${categoryConfig.color}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px;">${categoryConfig.icon}</div>`,
+    const icon = L.icon({
+        iconUrl: categoryConfig.icon,
         iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        iconAnchor: [15, 15],
+        className: `marker-icon marker-${news.category} ${!isNewsViewed(news.id) ? 'unviewed' : ''}`
     });
     const marker = L.marker([news.lat, news.lng], { icon }).addTo(newsMap);
     markers.push(marker);
@@ -618,14 +644,12 @@ function showNewsCard(news) {
     const existingModal = document.querySelector('.news-card-modal');
     if (existingModal) existingModal.remove();
 
-    // Сохраняем текущее состояние карты перед зумом
     previousMapState = {
         center: newsMap.getCenter(),
         zoom: newsMap.getZoom()
     };
 
-    // Плавный зум к маркеру
-    newsMap.flyTo([news.lat, news.lng], 14, { duration: 1 });
+    newsMap.flyTo([news.lat, news.lng], 12, { duration: 1 });
 
     const modal = document.createElement('div');
     modal.className = 'news-card-modal';
@@ -633,23 +657,27 @@ function showNewsCard(news) {
     const authorName = news.profiles.display_name || 'Неизвестно';
     const isAuthor = currentUser && currentUser.id === news.user_id;
     const deleteButton = isAuthor ? `<button class="delete-btn" data-news-id="${news.id}">Удалить</button>` : '';
+    const contacts = news.contacts ? `<div class="contacts">Контакты: ${news.contacts}</div>` : '';
+    const createdAt = new Date(news.created_at).toLocaleDateString('ru-RU');
 
     modal.innerHTML = `
-        <span class="close" title="Закрыть">×</span>
         <div class="news-card">
             ${news.image_url ? `<img src="${news.image_url}" alt="News image">` : ''}
             <div class="content">
                 <div class="category">${categoryConfig.name}</div>
                 <div class="text">${news.text}</div>
                 <div class="address">Загрузка адреса...</div>
+                ${contacts}
                 <div class="meta">
                     <span class="author">Автор: ${authorName}</span>
                     <span class="views">Просмотры: ${news.views || 0}</span>
+                    <span class="date">Опубликовано: ${createdAt}</span>
                     <button class="share-btn" data-news-id="${news.id}">Поделиться</button>
                     ${deleteButton}
                 </div>
             </div>
         </div>
+        <button class="close-btn">Закрыть</button>
     `;
 
     document.body.appendChild(modal);
@@ -664,11 +692,11 @@ function showNewsCard(news) {
         const viewedNews = JSON.parse(localStorage.getItem('viewedNews') || '[]');
         viewedNews.push(news.id);
         localStorage.setItem('viewedNews', JSON.stringify(viewedNews));
-        markersMap[news.id].setIcon(L.divIcon({
-            className: `marker-icon marker-${news.category}`,
-            html: `<div style="background-color: ${categoryConfig.color}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px;">${categoryConfig.icon}</div>`,
+        markersMap[news.id].setIcon(L.icon({
+            iconUrl: categoryConfig.icon,
             iconSize: [30, 30],
-            iconAnchor: [15, 15]
+            iconAnchor: [15, 15],
+            className: `marker-icon marker-${news.category}`
         }));
     }
 
@@ -687,7 +715,7 @@ function showNewsCard(news) {
         });
     }
 
-    modal.querySelector('.close').addEventListener('click', () => closeNewsCardModal(modal));
+    modal.querySelector('.close-btn').addEventListener('click', () => closeNewsCardModal(modal));
 }
 
 async function updateNewsViews(newsId, currentViews) {
@@ -742,7 +770,7 @@ function closeNewsCardModal(modal) {
             newsMap.flyTo(previousMapState.center, previousMapState.zoom, { duration: 1 });
             previousMapState = null;
         }
-    }, 300); // Совпадает с длительностью transition в CSS
+    }, 300);
 }
 
 function clearMarkers() {
@@ -762,7 +790,7 @@ function filterMarkers(category) {
 }
 
 function toggleImageUpload() {
-    const category = document.getElementById('news-category').value;
+    const category = newsCategorySelect.value;
     const imageUpload = document.getElementById('image-upload');
     imageUpload.style.display = (category === 'stories' || category === 'services') ? 'block' : 'none';
 }
@@ -774,34 +802,6 @@ function checkUrlForNews() {
         const marker = markersMap[newsId];
         newsMap.flyTo(marker.getLatLng(), 14, { duration: 1 });
         showNewsCard(marker.news);
-    }
-}
-
-async function handleAddressInput() {
-    const query = addressInput.value;
-    const suggestionsContainer = document.getElementById('address-suggestions');
-    if (query.length < 3) {
-        suggestionsContainer.innerHTML = '';
-        return;
-    }
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&bounded=1&viewbox=32.5,46.2,36.6,44.3`);
-        const data = await response.json();
-        suggestionsContainer.innerHTML = '';
-        data.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'suggestion';
-            div.textContent = item.display_name;
-            div.addEventListener('click', () => {
-                addressInput.value = item.display_name;
-                suggestionsContainer.innerHTML = '';
-                locationMap.setView([item.lat, item.lon], 14);
-                locationMarker.setLatLng([item.lat, item.lon]);
-            });
-            suggestionsContainer.appendChild(div);
-        });
-    } catch (error) {
-        console.error('Ошибка поиска адреса:', error.message);
     }
 }
 
