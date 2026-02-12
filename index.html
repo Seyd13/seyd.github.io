@@ -17,16 +17,14 @@
             --fg: #f1f5f9;
             --muted: #64748b;
             --accent: #f59e0b;
-            --accent-hover: #fbbf24;
             --card: rgba(30, 41, 59, 0.7);
             --border: rgba(100, 116, 139, 0.3);
             --success: #10b981;
             --error: #ef4444;
+            --jackpot: #ec4899;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -36,14 +34,12 @@
             overflow-x: hidden;
         }
 
-        h1, h2, h3, h4 {
-            font-family: 'Space Grotesk', sans-serif;
-        }
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
 
         .gradient-bg {
             background: 
-                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(245, 158, 11, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
                 var(--bg);
         }
 
@@ -65,9 +61,14 @@
             cursor: pointer;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .btn-secondary {
@@ -102,21 +103,19 @@
             box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
         }
 
-        .case-box {
-            perspective: 1000px;
-        }
+        .case-box { perspective: 1000px; }
 
         .case-inner {
-            width: 120px;
-            height: 140px;
+            width: 100px;
+            height: 120px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s ease;
             cursor: pointer;
         }
 
-        .case-inner:hover {
-            transform: rotateY(15deg) rotateX(5deg);
+        .case-inner:hover:not(.opened) { 
+            transform: rotateY(15deg) rotateX(5deg); 
         }
 
         .case-front, .case-back {
@@ -134,58 +133,54 @@
         .case-front {
             background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
             border: 2px solid var(--accent);
-            box-shadow: 
-                0 0 30px rgba(245, 158, 11, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .case-back {
             background: linear-gradient(145deg, var(--accent) 0%, #d97706 100%);
             transform: rotateY(180deg);
+            padding: 8px;
+            text-align: center;
         }
 
-        .case-inner.opened {
-            transform: rotateY(180deg);
+        .case-inner.opened { 
+            transform: rotateY(180deg); 
+            cursor: default;
         }
 
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6); }
+            0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.5); }
         }
 
-        .case-front.unopened {
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
+        .case-front.unopened { animation: pulse-glow 2s ease-in-out infinite; }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0) rotate(0); }
-            25% { transform: translateX(-5px) rotate(-5deg); }
-            75% { transform: translateX(5px) rotate(5deg); }
+            0%, 100% { transform: rotateY(0deg) translateX(0); }
+            25% { transform: rotateY(0deg) translateX(-5px) rotate(-3deg); }
+            75% { transform: rotateY(0deg) translateX(5px) rotate(3deg); }
         }
 
-        .shake-animation {
-            animation: shake 0.5s ease-in-out;
-        }
+        .shake-animation { animation: shake 0.4s ease-in-out; }
 
-        @keyframes confetti {
-            0% { transform: translateY(0) rotate(0); opacity: 1; }
-            100% { transform: translateY(-200px) rotate(720deg); opacity: 0; }
+        @keyframes confetti-fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-300px) rotate(720deg); opacity: 0; }
         }
 
         .confetti {
             position: fixed;
             pointer-events: none;
             z-index: 1000;
+            animation: confetti-fall 2s ease-out forwards;
         }
+
+        @keyframes jackpot-glow {
+            0%, 100% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.5); }
+            50% { box-shadow: 0 0 60px rgba(236, 72, 153, 0.8); }
+        }
+
+        .jackpot-prize { animation: jackpot-glow 1s ease-in-out infinite; }
 
         .stat-card {
             background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
@@ -223,10 +218,7 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        #map {
-            border-radius: 12px;
-            z-index: 1;
-        }
+        #map { border-radius: 12px; z-index: 1; }
 
         .leaflet-popup-content-wrapper {
             background: var(--bg-secondary);
@@ -235,22 +227,18 @@
             border: 1px solid var(--border);
         }
 
-        .leaflet-popup-tip {
-            background: var(--bg-secondary);
-        }
-
-        .custom-marker {
-            background: var(--accent);
-            border-radius: 50%;
-            border: 3px solid #fff;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-        }
+        .leaflet-popup-tip { background: var(--bg-secondary); }
 
         .prize-item {
             background: linear-gradient(145deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 100%);
             border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 10px;
             padding: 12px;
+        }
+
+        .prize-item.jackpot {
+            background: linear-gradient(145deg, rgba(236, 72, 153, 0.3) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border-color: rgba(236, 72, 153, 0.5);
         }
 
         .promo-badge {
@@ -263,9 +251,7 @@
             letter-spacing: 1px;
         }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease forwards;
-        }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -277,21 +263,44 @@
         .stagger-3 { animation-delay: 0.3s; }
         .stagger-4 { animation-delay: 0.4s; }
 
+        .calculation-display {
+            background: linear-gradient(145deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .prize-rarity { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+        .rarity-legendary { background: rgba(236, 72, 153, 0.3); color: #f472b6; }
+        .rarity-epic { background: rgba(168, 85, 247, 0.3); color: #c084fc; }
+        .rarity-rare { background: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+        .rarity-common { background: rgba(100, 116, 139, 0.3); color: #94a3b8; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+
+        .prize-reveal {
+            transform: scale(0);
+            animation: prizeReveal 0.5s ease forwards;
+        }
+
+        @keyframes prizeReveal {
+            0% { transform: scale(0) rotate(-10deg); }
+            50% { transform: scale(1.2) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
             }
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
         }
     </style>
 </head>
@@ -325,7 +334,7 @@
                     <span class="text-amber-400">в увлекательную игру</span>
                 </h1>
                 <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-8">
-                    Виртуальные кейсы с призами для увеличения продаж и лояльности клиентов
+                    Виртуальные кейсы с реальными призами для увеличения продаж и лояльности клиентов
                 </p>
                 <div class="flex flex-wrap gap-4 justify-center">
                     <button onclick="showLoginModal()" class="btn-primary text-lg">Начать сейчас</button>
@@ -333,7 +342,6 @@
                 </div>
             </div>
 
-            <!-- Stats Preview -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
                 <div class="stat-card text-center fade-in stagger-1" style="opacity: 0;">
                     <div class="text-3xl font-bold text-amber-400 mb-1">+40%</div>
@@ -353,7 +361,6 @@
                 </div>
             </div>
 
-            <!-- How it Works -->
             <div id="demo-section" class="glass-card p-8 mb-16">
                 <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center">Как это работает</h2>
                 <div class="grid md:grid-cols-3 gap-8">
@@ -364,30 +371,56 @@
                             </svg>
                         </div>
                         <h3 class="text-lg font-semibold mb-2">Клиент делает покупку</h3>
-                        <p class="text-slate-400 text-sm">При покупке от установленной суммы клиент получает виртуальный кейс</p>
+                        <p class="text-slate-400 text-sm">Сумма покупки делится на настройку бизнеса — получаем количество кейсов</p>
                     </div>
                     <div class="text-center">
                         <div class="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-emerald-400/20 to-emerald-600/20 flex items-center justify-center">
                             <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">Открывает кейс</h3>
-                        <p class="text-slate-400 text-sm">В приложении клиент открывает кейс и получает случайный приз</p>
+                        <h3 class="text-lg font-semibold mb-2">Получает промокод</h3>
+                        <p class="text-slate-400 text-sm">Бизнес выдаёт уникальный промокод с рассчитанным количеством кейсов</p>
                     </div>
                     <div class="text-center">
                         <div class="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-cyan-400/20 to-cyan-600/20 flex items-center justify-center">
                             <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">Возвращается снова</h3>
-                        <p class="text-slate-400 text-sm">Игровой элемент мотивирует клиентов возвращаться за новыми призами</p>
+                        <h3 class="text-lg font-semibold mb-2">Выигрывает призы</h3>
+                        <p class="text-slate-400 text-sm">Клиент открывает кейсы и получает реальные призы</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Map Preview -->
+            <!-- Prizes Preview -->
+            <div class="glass-card p-8 mb-16">
+                <h2 class="text-2xl font-bold mb-6 text-center">Возможные призы</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 rounded-xl bg-gradient-to-br from-pink-500/10 to-transparent border border-pink-500/20">
+                        <div class="text-4xl mb-2">📱</div>
+                        <div class="font-semibold">iPhone 15</div>
+                        <span class="prize-rarity rarity-legendary">Легендарный</span>
+                    </div>
+                    <div class="text-center p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20">
+                        <div class="text-4xl mb-2">🎧</div>
+                        <div class="font-semibold">AirPods Pro</div>
+                        <span class="prize-rarity rarity-epic">Эпический</span>
+                    </div>
+                    <div class="text-center p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20">
+                        <div class="text-4xl mb-2">🔋</div>
+                        <div class="font-semibold">Power Bank</div>
+                        <span class="prize-rarity rarity-rare">Редкий</span>
+                    </div>
+                    <div class="text-center p-4 rounded-xl bg-gradient-to-br from-slate-500/10 to-transparent border border-slate-500/20">
+                        <div class="text-4xl mb-2">☕</div>
+                        <div class="font-semibold">Термокружка</div>
+                        <span class="prize-rarity rarity-common">Обычный</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="glass-card p-6">
                 <h2 class="text-2xl font-bold mb-4">Точки на карте</h2>
                 <p class="text-slate-400 mb-4">Ваши кафе и кофейни будут отображаться на карте для клиентов</p>
@@ -398,7 +431,6 @@
         <!-- Business Dashboard -->
         <section id="business-dashboard" class="max-w-7xl mx-auto hidden">
             <div class="grid lg:grid-cols-3 gap-6">
-                <!-- Left Column -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Stats -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 fade-in">
@@ -420,28 +452,50 @@
                         </div>
                     </div>
 
-                    <!-- Map -->
+                    <!-- Generate Promo for Purchase -->
                     <div class="glass-card p-6 fade-in stagger-1" style="opacity: 0;">
+                        <h2 class="text-xl font-bold mb-4">Выдать промокод клиенту</h2>
+                        <p class="text-slate-400 text-sm mb-4">Введите сумму покупки клиента для автоматического расчёта кейсов</p>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm text-slate-400 mb-2">Сумма покупки (₽)</label>
+                                <input type="number" id="purchase-amount" class="input-field text-xl font-bold text-center" placeholder="1000" min="0" oninput="calculateCases()">
+                            </div>
+                            <div class="calculation-display flex flex-col justify-center">
+                                <div class="text-sm text-slate-400 mb-1">Кейсов к выдаче</div>
+                                <div class="flex items-baseline gap-2">
+                                    <span id="calculated-cases" class="text-4xl font-bold text-amber-400">0</span>
+                                    <span class="text-slate-400">шт.</span>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">
+                                    Формула: сумма / <span id="display-rule">300</span>₽
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex flex-wrap gap-3 items-center">
+                            <button onclick="generatePromoFromPurchase()" class="btn-primary" id="generate-promo-btn" disabled>
+                                Сгенерировать промокод
+                            </button>
+                            <span id="balance-warning" class="text-sm text-red-400 hidden">Недостаточно кейсов на балансе</span>
+                        </div>
+                    </div>
+
+                    <!-- Map -->
+                    <div class="glass-card p-6 fade-in stagger-2" style="opacity: 0;">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-xl font-bold">Ваша точка на карте</h2>
-                            <button onclick="editLocation()" class="btn-secondary text-sm">Редактировать</button>
+                            <button onclick="alert('Кликните по карте чтобы изменить расположение точки')" class="btn-secondary text-sm">Подсказка</button>
                         </div>
                         <div id="business-map" class="h-80 rounded-xl overflow-hidden"></div>
                     </div>
 
-                    <!-- Promo Codes -->
-                    <div class="glass-card p-6 fade-in stagger-2" style="opacity: 0;">
-                        <h2 class="text-xl font-bold mb-4">Промокоды для выдачи кейсов</h2>
-                        <p class="text-slate-400 text-sm mb-4">Сгенерируйте промокод и передайте клиенту для получения кейса</p>
-                        
-                        <div class="flex flex-wrap gap-3 mb-4">
-                            <button onclick="generatePromoCode(1)" class="btn-primary text-sm">1 кейс</button>
-                            <button onclick="generatePromoCode(3)" class="btn-secondary text-sm">3 кейса</button>
-                            <button onclick="generatePromoCode(5)" class="btn-secondary text-sm">5 кейсов</button>
-                        </div>
-
-                        <div id="generated-promos" class="space-y-2">
-                            <!-- Generated promos will appear here -->
+                    <!-- Generated Promos History -->
+                    <div class="glass-card p-6 fade-in stagger-3" style="opacity: 0;">
+                        <h2 class="text-xl font-bold mb-4">История промокодов</h2>
+                        <div id="generated-promos" class="space-y-2 max-h-64 overflow-y-auto">
+                            <p class="text-slate-500 text-sm">Сгенерированные промокоды появятся здесь</p>
                         </div>
                     </div>
                 </div>
@@ -462,12 +516,12 @@
                                 <input type="text" id="business-address" class="input-field" placeholder="ул. Примерная, 123" onchange="saveBusinessSettings()">
                             </div>
                             <div>
-                                <label class="block text-sm text-slate-400 mb-2">Правило выдачи кейса</label>
-                                <select id="case-rule" class="input-field" onchange="saveBusinessSettings()">
-                                    <option value="100">Каждые 100₽</option>
-                                    <option value="300" selected>Каждые 300₽</option>
-                                    <option value="500">Каждые 500₽</option>
-                                </select>
+                                <label class="block text-sm text-slate-400 mb-2">Стоимость одного кейса (₽)</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-400 text-sm">1 кейс за</span>
+                                    <input type="number" id="case-rule" class="input-field text-center font-bold" value="300" min="1" onchange="saveBusinessSettings(); updateRuleDisplay();">
+                                    <span class="text-slate-400 text-sm">₽ покупки</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -479,14 +533,14 @@
                         
                         <div class="space-y-3">
                             <div class="flex gap-2">
-                                <input type="number" id="cases-to-add" class="input-field" placeholder="Количество" value="50">
+                                <input type="number" id="cases-to-add" class="input-field" placeholder="Количество" value="100">
                                 <button onclick="addCases(parseInt(document.getElementById('cases-to-add').value) || 0)" class="btn-primary whitespace-nowrap">Пополнить</button>
                             </div>
                             <div class="flex flex-wrap gap-2">
-                                <button onclick="addCases(10)" class="btn-secondary text-xs">+10</button>
                                 <button onclick="addCases(50)" class="btn-secondary text-xs">+50</button>
                                 <button onclick="addCases(100)" class="btn-secondary text-xs">+100</button>
-                                <button onclick="addCases(200)" class="btn-secondary text-xs">+200</button>
+                                <button onclick="addCases(500)" class="btn-secondary text-xs">+500</button>
+                                <button onclick="addCases(1000)" class="btn-secondary text-xs">+1000</button>
                             </div>
                         </div>
                     </div>
@@ -496,28 +550,67 @@
                         <h2 class="text-xl font-bold mb-4">Призы в кейсах</h2>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                                <span>Бесплатный напиток</span>
-                                <span class="text-amber-400">30%</span>
+                                <div class="flex items-center gap-2">
+                                    <span>📱</span>
+                                    <span>iPhone 15 Pro</span>
+                                </div>
+                                <span class="prize-rarity rarity-legendary">0.5%</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                                <span>Скидка 10%</span>
-                                <span class="text-amber-400">25%</span>
+                                <div class="flex items-center gap-2">
+                                    <span>⌚</span>
+                                    <span>Apple Watch</span>
+                                </div>
+                                <span class="prize-rarity rarity-epic">1%</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                                <span>Десерт</span>
-                                <span class="text-amber-400">20%</span>
+                                <div class="flex items-center gap-2">
+                                    <span>🎧</span>
+                                    <span>AirPods Pro</span>
+                                </div>
+                                <span class="prize-rarity rarity-epic">2%</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                                <span>Бонус 100₽</span>
-                                <span class="text-amber-400">15%</span>
+                                <div class="flex items-center gap-2">
+                                    <span>🔊</span>
+                                    <span>Bluetooth колонка</span>
+                                </div>
+                                <span class="prize-rarity rarity-rare">5%</span>
                             </div>
                             <div class="flex justify-between items-center py-2 border-b border-slate-700">
-                                <span>Бонус 500₽</span>
-                                <span class="text-amber-400">7%</span>
+                                <div class="flex items-center gap-2">
+                                    <span>🔋</span>
+                                    <span>Power Bank 20000mAh</span>
+                                </div>
+                                <span class="prize-rarity rarity-rare">10%</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                                <div class="flex items-center gap-2">
+                                    <span>🎒</span>
+                                    <span>Городской рюкзак</span>
+                                </div>
+                                <span class="prize-rarity rarity-common">15%</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                                <div class="flex items-center gap-2">
+                                    <span>☕</span>
+                                    <span>Термокружка</span>
+                                </div>
+                                <span class="prize-rarity rarity-common">20%</span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                                <div class="flex items-center gap-2">
+                                    <span>👕</span>
+                                    <span>Фирменная футболка</span>
+                                </div>
+                                <span class="prize-rarity rarity-common">22%</span>
                             </div>
                             <div class="flex justify-between items-center py-2">
-                                <span>iPhone (джекпот)</span>
-                                <span class="text-pink-400">3%</span>
+                                <div class="flex items-center gap-2">
+                                    <span>🎁</span>
+                                    <span>Набор сувениров</span>
+                                </div>
+                                <span class="prize-rarity rarity-common">24.5%</span>
                             </div>
                         </div>
                     </div>
@@ -527,7 +620,6 @@
 
         <!-- Client Dashboard -->
         <section id="client-dashboard" class="max-w-4xl mx-auto hidden">
-            <!-- Client Stats -->
             <div class="grid grid-cols-3 gap-4 mb-8 fade-in">
                 <div class="stat-card text-center">
                     <div class="text-sm text-slate-400 mb-1">Мои кейсы</div>
@@ -545,8 +637,8 @@
 
             <!-- Promo Input -->
             <div class="glass-card p-6 mb-8 fade-in stagger-1" style="opacity: 0;">
-                <h2 class="text-xl font-bold mb-4">Получить кейсы</h2>
-                <p class="text-slate-400 text-sm mb-4">Введите промокод от кафе для получения виртуальных кейсов</p>
+                <h2 class="text-xl font-bold mb-4">Активировать промокод</h2>
+                <p class="text-slate-400 text-sm mb-4">Введите промокод, полученный в кафе</p>
                 
                 <div class="flex gap-3">
                     <input type="text" id="promo-input" class="input-field text-center font-mono text-lg tracking-widest" placeholder="XXXX-XXXX" maxlength="9">
@@ -557,9 +649,11 @@
 
             <!-- Cases Grid -->
             <div class="glass-card p-6 mb-8 fade-in stagger-2" style="opacity: 0;">
-                <h2 class="text-xl font-bold mb-6">Мои кейсы</h2>
-                <div id="cases-grid" class="grid grid-cols-3 md:grid-cols-5 gap-4">
-                    <!-- Cases will be rendered here -->
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold">Мои кейсы</h2>
+                    <button onclick="openAllCases()" id="open-all-btn" class="btn-secondary text-sm hidden">Открыть все</button>
+                </div>
+                <div id="cases-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                     <div class="text-center text-slate-500 col-span-full py-8">
                         У вас пока нет кейсов. Введите промокод выше.
                     </div>
@@ -569,7 +663,7 @@
             <!-- Prizes List -->
             <div class="glass-card p-6 fade-in stagger-3" style="opacity: 0;">
                 <h2 class="text-xl font-bold mb-4">Выигранные призы</h2>
-                <div id="prizes-list" class="space-y-2">
+                <div id="prizes-list" class="space-y-2 max-h-80 overflow-y-auto">
                     <div class="text-center text-slate-500 py-8">
                         Пока нет выигранных призов. Откройте кейс!
                     </div>
@@ -622,43 +716,35 @@
         </div>
     </div>
 
-    <!-- Case Opening Modal -->
-    <div id="case-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="glass-card p-8 w-full max-w-md text-center">
-            <div class="case-box mx-auto mb-6">
-                <div id="modal-case" class="case-inner mx-auto">
-                    <div class="case-front unopened">
-                        <svg class="w-12 h-12 text-amber-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
-                        <span class="text-sm font-medium text-slate-300">Нажмите чтобы открыть</span>
-                    </div>
-                    <div class="case-back">
-                        <div id="prize-icon" class="text-4xl mb-2"></div>
-                        <div id="prize-text" class="text-lg font-bold text-black"></div>
-                    </div>
-                </div>
+    <!-- Prize Modal -->
+    <div id="prize-modal" class="modal-overlay hidden items-center justify-center p-4">
+        <div class="glass-card p-8 w-full max-w-md text-center relative">
+            <div id="prize-content" class="prize-reveal">
+                <div id="prize-icon-display" class="text-7xl mb-4"></div>
+                <h3 id="prize-title" class="text-2xl font-bold mb-2"></h3>
+                <span id="prize-rarity-display" class="prize-rarity mb-4 inline-block"></span>
             </div>
-            <p id="case-instruction" class="text-slate-400">Нажмите на кейс чтобы открыть</p>
-            <button onclick="closeCaseModal()" class="btn-secondary mt-4 hidden" id="close-case-btn">Закрыть</button>
+            <button onclick="closePrizeModal()" class="btn-primary mt-6">Забрать приз</button>
         </div>
     </div>
 
-    <!-- Confetti Container -->
     <div id="confetti-container"></div>
 
     <script>
-        // ==================== DATA ====================
+        // ==================== PRIZES DATA ====================
         const PRIZES = [
-            { name: 'Бесплатный напиток', chance: 30, icon: '☕' },
-            { name: 'Скидка 10%', chance: 25, icon: '🎫' },
-            { name: 'Десерт', chance: 20, icon: '🍰' },
-            { name: 'Бонус 100₽', chance: 15, icon: '💵' },
-            { name: 'Бонус 500₽', chance: 7, icon: '💰' },
-            { name: 'iPhone!', chance: 3, icon: '📱' }
+            { name: 'iPhone 15 Pro', chance: 0.5, icon: '📱', rarity: 'legendary' },
+            { name: 'Apple Watch', chance: 1, icon: '⌚', rarity: 'epic' },
+            { name: 'AirPods Pro', chance: 2, icon: '🎧', rarity: 'epic' },
+            { name: 'Bluetooth колонка', chance: 5, icon: '🔊', rarity: 'rare' },
+            { name: 'Power Bank 20000mAh', chance: 10, icon: '🔋', rarity: 'rare' },
+            { name: 'Городской рюкзак', chance: 15, icon: '🎒', rarity: 'common' },
+            { name: 'Термокружка', chance: 20, icon: '☕', rarity: 'common' },
+            { name: 'Фирменная футболка', chance: 22, icon: '👕', rarity: 'common' },
+            { name: 'Набор сувениров', chance: 24.5, icon: '🎁', rarity: 'common' }
         ];
 
-        // Initialize state with defaults
+        // ==================== STATE ====================
         let appState = {
             currentUser: null,
             userType: null,
@@ -682,9 +768,15 @@
             generatedPromos: []
         };
 
+        let previewMap = null;
+        let businessMap = null;
+        let clientMap = null;
+        let businessMarker = null;
+        let isOpeningCase = false;
+
         // ==================== INITIALIZATION ====================
         function loadState() {
-            const saved = localStorage.getItem('citybox_state');
+            const saved = localStorage.getItem('citybox_state_v2');
             if (saved) {
                 const parsed = JSON.parse(saved);
                 appState = { ...appState, ...parsed };
@@ -692,16 +784,9 @@
         }
 
         function saveState() {
-            localStorage.setItem('citybox_state', JSON.stringify(appState));
+            localStorage.setItem('citybox_state_v2', JSON.stringify(appState));
         }
 
-        // Maps
-        let previewMap = null;
-        let businessMap = null;
-        let clientMap = null;
-        let businessMarker = null;
-
-        // ==================== ON LOAD ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadState();
             initPreviewMap();
@@ -716,6 +801,7 @@
             }
             
             updateHeaderState();
+            initPromoInput();
         });
 
         // ==================== MAPS ====================
@@ -725,7 +811,6 @@
                 attribution: '© OpenStreetMap'
             }).addTo(previewMap);
 
-            // Add demo markers
             const demoPoints = [
                 { lat: 55.7558, lng: 37.6173, name: 'Кофейня CityBox', address: 'ул. Тверская, 15' },
                 { lat: 55.7621, lng: 37.6256, name: 'Кафе Уют', address: 'ул. Петровка, 22' },
@@ -741,19 +826,12 @@
                     fillOpacity: 0.9
                 }).addTo(previewMap);
 
-                marker.bindPopup(`
-                    <div class="p-2">
-                        <strong>${point.name}</strong><br>
-                        <span class="text-slate-400">${point.address}</span>
-                    </div>
-                `);
+                marker.bindPopup(`<div class="p-2"><strong>${point.name}</strong><br><span class="text-slate-400">${point.address}</span></div>`);
             });
         }
 
         function initBusinessMap() {
-            if (businessMap) {
-                businessMap.remove();
-            }
+            if (businessMap) businessMap.remove();
 
             businessMap = L.map('business-map').setView([appState.business.location.lat, appState.business.location.lng], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -768,34 +846,37 @@
                 fillOpacity: 0.9
             }).addTo(businessMap);
 
+            updateMarkerPopup();
+
+            businessMap.on('click', function(e) {
+                appState.business.location = { lat: e.latlng.lat, lng: e.latlng.lng };
+                businessMarker.setLatLng(e.latlng);
+                updateMarkerPopup();
+                saveState();
+            });
+        }
+
+        function updateMarkerPopup() {
+            if (!businessMarker) return;
             const info = `
                 <div class="p-3">
                     <strong class="text-amber-400">${appState.business.name || 'Ваша точка'}</strong><br>
                     <span class="text-slate-400">${appState.business.address || 'Адрес не указан'}</span><br>
                     <span class="text-sm">Кейсов: ${appState.business.balance}</span><br>
-                    <span class="text-xs text-slate-500">Правило: каждые ${appState.business.rule}₽</span>
+                    <span class="text-xs text-slate-500">1 кейс за ${appState.business.rule}₽</span>
                 </div>
             `;
             businessMarker.bindPopup(info);
-
-            businessMap.on('click', function(e) {
-                appState.business.location = { lat: e.latlng.lat, lng: e.latlng.lng };
-                businessMarker.setLatLng(e.latlng);
-                saveState();
-            });
         }
 
         function initClientMap() {
-            if (clientMap) {
-                clientMap.remove();
-            }
+            if (clientMap) clientMap.remove();
 
             clientMap = L.map('client-map').setView([appState.business.location.lat, appState.business.location.lng], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(clientMap);
 
-            // Show all businesses on client map
             if (appState.business.name || appState.business.balance > 0) {
                 const marker = L.circleMarker([appState.business.location.lat, appState.business.location.lng], {
                     radius: 12,
@@ -906,15 +987,13 @@
             document.getElementById('client-dashboard').classList.add('hidden');
             updateBusinessStats();
             
-            setTimeout(() => {
-                initBusinessMap();
-            }, 100);
+            setTimeout(() => initBusinessMap(), 100);
 
-            // Load settings
             document.getElementById('business-name').value = appState.business.name;
             document.getElementById('business-address').value = appState.business.address;
             document.getElementById('case-rule').value = appState.business.rule;
-
+            
+            updateRuleDisplay();
             renderGeneratedPromos();
         }
 
@@ -925,9 +1004,7 @@
             renderClientCases();
             renderClientPrizes();
             
-            setTimeout(() => {
-                initClientMap();
-            }, 100);
+            setTimeout(() => initClientMap(), 100);
         }
 
         // ==================== BUSINESS LOGIC ====================
@@ -943,46 +1020,59 @@
             appState.business.balance += count;
             saveState();
             updateBusinessStats();
-            
-            if (businessMarker) {
-                businessMarker.setPopupContent(`
-                    <div class="p-3">
-                        <strong class="text-amber-400">${appState.business.name || 'Ваша точка'}</strong><br>
-                        <span class="text-slate-400">${appState.business.address || 'Адрес не указан'}</span><br>
-                        <span class="text-sm">Кейсов: ${appState.business.balance}</span><br>
-                        <span class="text-xs text-slate-500">Правило: каждые ${appState.business.rule}₽</span>
-                    </div>
-                `);
-            }
+            updateMarkerPopup();
+            calculateCases();
         }
 
         function saveBusinessSettings() {
             appState.business.name = document.getElementById('business-name').value;
             appState.business.address = document.getElementById('business-address').value;
-            appState.business.rule = parseInt(document.getElementById('case-rule').value);
+            appState.business.rule = Math.max(1, parseInt(document.getElementById('case-rule').value) || 300);
+            document.getElementById('case-rule').value = appState.business.rule;
             saveState();
+            updateMarkerPopup();
+            calculateCases();
+        }
+
+        function updateRuleDisplay() {
+            document.getElementById('display-rule').textContent = appState.business.rule;
+        }
+
+        function calculateCases() {
+            const purchaseAmount = parseFloat(document.getElementById('purchase-amount').value) || 0;
+            const rule = appState.business.rule;
+            const casesCount = Math.floor(purchaseAmount / rule);
             
-            if (businessMarker) {
-                businessMarker.setPopupContent(`
-                    <div class="p-3">
-                        <strong class="text-amber-400">${appState.business.name || 'Ваша точка'}</strong><br>
-                        <span class="text-slate-400">${appState.business.address || 'Адрес не указан'}</span><br>
-                        <span class="text-sm">Кейсов: ${appState.business.balance}</span><br>
-                        <span class="text-xs text-slate-500">Правило: каждые ${appState.business.rule}₽</span>
-                    </div>
-                `);
+            document.getElementById('calculated-cases').textContent = casesCount;
+            document.getElementById('display-rule').textContent = rule;
+            
+            const generateBtn = document.getElementById('generate-promo-btn');
+            const warning = document.getElementById('balance-warning');
+            
+            if (casesCount === 0) {
+                generateBtn.disabled = true;
+                warning.classList.add('hidden');
+            } else if (casesCount > appState.business.balance) {
+                generateBtn.disabled = true;
+                warning.classList.remove('hidden');
+            } else {
+                generateBtn.disabled = false;
+                warning.classList.add('hidden');
             }
         }
 
-        function editLocation() {
-            alert('Кликните по карте чтобы изменить расположение точки');
-        }
-
-        function generatePromoCode(casesCount) {
+        function generatePromoFromPurchase() {
+            const purchaseAmount = parseFloat(document.getElementById('purchase-amount').value) || 0;
+            const casesCount = Math.floor(purchaseAmount / appState.business.rule);
+            
+            if (casesCount <= 0 || casesCount > appState.business.balance) return;
+            
             const code = generateCode();
+            
             appState.promoCodes.push({
                 code: code,
                 cases: casesCount,
+                purchaseAmount: purchaseAmount,
                 used: false,
                 createdAt: new Date().toISOString()
             });
@@ -990,11 +1080,22 @@
             appState.generatedPromos.unshift({
                 code: code,
                 cases: casesCount,
+                purchaseAmount: purchaseAmount,
                 createdAt: new Date().toLocaleString('ru-RU')
             });
 
+            appState.business.balance -= casesCount;
+            appState.business.issued += casesCount;
+
             saveState();
+            updateBusinessStats();
             renderGeneratedPromos();
+            
+            document.getElementById('purchase-amount').value = '';
+            document.getElementById('calculated-cases').textContent = '0';
+            document.getElementById('generate-promo-btn').disabled = true;
+            
+            updateMarkerPopup();
         }
 
         function generateCode() {
@@ -1014,15 +1115,18 @@
             const container = document.getElementById('generated-promos');
             
             if (appState.generatedPromos.length === 0) {
-                container.innerHTML = '<p class="text-slate-500 text-sm">Нажмите кнопку выше чтобы создать промокод</p>';
+                container.innerHTML = '<p class="text-slate-500 text-sm">Сгенерированные промокоды появятся здесь</p>';
                 return;
             }
 
-            container.innerHTML = appState.generatedPromos.slice(0, 10).map(promo => `
+            container.innerHTML = appState.generatedPromos.slice(0, 20).map(promo => `
                 <div class="flex items-center justify-between bg-black/30 rounded-lg p-3">
-                    <div>
+                    <div class="flex-1">
                         <span class="promo-badge">${promo.code}</span>
-                        <span class="text-sm text-slate-400 ml-3">${promo.cases} кейс(ов)</span>
+                        <div class="mt-1">
+                            <span class="text-sm text-slate-400">${promo.cases} кейс(ов)</span>
+                            <span class="text-xs text-slate-500 ml-2">от ${promo.purchaseAmount}₽</span>
+                        </div>
                     </div>
                     <span class="text-xs text-slate-500">${promo.createdAt}</span>
                 </div>
@@ -1034,6 +1138,13 @@
             document.getElementById('client-cases').textContent = appState.client.cases;
             document.getElementById('client-opened').textContent = appState.client.openedCases;
             document.getElementById('client-prizes').textContent = appState.client.prizes.length;
+            
+            const openAllBtn = document.getElementById('open-all-btn');
+            if (appState.client.cases > 1) {
+                openAllBtn.classList.remove('hidden');
+            } else {
+                openAllBtn.classList.add('hidden');
+            }
         }
 
         function redeemPromoCode() {
@@ -1062,30 +1173,24 @@
                 message.classList.remove('hidden');
             }
             
-            setTimeout(() => {
-                message.classList.add('hidden');
-            }, 3000);
+            setTimeout(() => message.classList.add('hidden'), 3000);
         }
 
         function renderClientCases() {
             const container = document.getElementById('cases-grid');
             
             if (appState.client.cases === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-500 col-span-full py-8">
-                        У вас пока нет кейсов. Введите промокод выше.
-                    </div>
-                `;
+                container.innerHTML = '<div class="text-center text-slate-500 col-span-full py-8">У вас пока нет кейсов. Введите промокод выше.</div>';
                 return;
             }
 
             let html = '';
             for (let i = 0; i < appState.client.cases; i++) {
                 html += `
-                    <div class="case-box flex justify-center">
-                        <div class="case-inner" onclick="openCase(this)">
+                    <div class="case-box flex justify-center" data-case-index="${i}">
+                        <div class="case-inner" onclick="handleCaseClick(this, ${i})">
                             <div class="case-front unopened">
-                                <svg class="w-8 h-8 text-amber-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-6 h-6 text-amber-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                                 </svg>
                                 <span class="text-xs text-slate-400">Открыть</span>
@@ -1100,47 +1205,76 @@
             container.innerHTML = html;
         }
 
-        function openCase(element) {
-            if (element.classList.contains('opened') || appState.client.cases <= 0) return;
-
-            element.classList.add('opened');
+        function handleCaseClick(element, index) {
+            if (isOpeningCase || element.classList.contains('opened')) return;
+            
+            isOpeningCase = true;
+            
+            // Удаляем кейс из DOM после анимации
             element.classList.add('shake-animation');
             
-            appState.client.cases--;
-            appState.client.openedCases++;
-            appState.business.opened++;
-
-            // Get prize
-            const prize = getRandomPrize();
-            appState.client.prizes.push({
-                ...prize,
-                wonAt: new Date().toLocaleString('ru-RU')
-            });
-
-            saveState();
-
-            // Update modal
-            document.getElementById('prize-icon').textContent = prize.icon;
-            document.getElementById('prize-text').textContent = prize.name;
-
-            // Show modal after animation
             setTimeout(() => {
-                element.classList.remove('shake-animation');
-                document.getElementById('case-modal').classList.remove('hidden');
-                document.getElementById('case-modal').classList.add('flex');
-                
-                // Show confetti for good prizes
-                if (prize.chance <= 15) {
-                    createConfetti();
-                }
-            }, 600);
+                // Уменьшаем счетчик
+                appState.client.cases--;
+                appState.client.openedCases++;
+                appState.business.opened++;
 
+                // Получаем приз
+                const prize = getRandomPrize();
+                appState.client.prizes.push({
+                    ...prize,
+                    wonAt: new Date().toLocaleString('ru-RU')
+                });
+
+                saveState();
+                
+                // Показываем модальное окно с призом
+                showPrizeModal(prize);
+                
+                // Обновляем UI
+                updateClientStats();
+                renderClientCases();
+                renderClientPrizes();
+                
+                if (appState.userType === 'business') updateBusinessStats();
+                
+                isOpeningCase = false;
+            }, 400);
+        }
+
+        function openAllCases() {
+            if (isOpeningCase || appState.client.cases <= 0) return;
+            
+            const casesToOpen = appState.client.cases;
+            const wonPrizes = [];
+            
+            for (let i = 0; i < casesToOpen; i++) {
+                const prize = getRandomPrize();
+                wonPrizes.push({
+                    ...prize,
+                    wonAt: new Date().toLocaleString('ru-RU')
+                });
+                appState.client.openedCases++;
+                appState.business.opened++;
+            }
+            
+            appState.client.cases = 0;
+            appState.client.prizes.push(...wonPrizes);
+            
+            saveState();
             updateClientStats();
             renderClientCases();
             renderClientPrizes();
             
-            if (appState.userType === 'business') {
-                updateBusinessStats();
+            if (appState.userType === 'business') updateBusinessStats();
+            
+            // Показываем последний крупный приз если есть
+            const epicPrize = wonPrizes.find(p => p.rarity === 'legendary' || p.rarity === 'epic');
+            if (epicPrize) {
+                showPrizeModal(epicPrize);
+                createConfetti(100);
+            } else {
+                alert(`Открыто ${casesToOpen} кейсов! Выиграно ${wonPrizes.length} призов.`);
             }
         }
 
@@ -1152,65 +1286,91 @@
                 random -= prize.chance;
                 if (random <= 0) return prize;
             }
-            return PRIZES[0];
+            return PRIZES[PRIZES.length - 1];
         }
 
-        function closeCaseModal() {
-            document.getElementById('case-modal').classList.add('hidden');
-            document.getElementById('case-modal').classList.remove('flex');
-            document.getElementById('close-case-btn').classList.add('hidden');
-            document.getElementById('case-instruction').textContent = 'Нажмите на кейс чтобы открыть';
+        function showPrizeModal(prize) {
+            const modal = document.getElementById('prize-modal');
+            const iconDisplay = document.getElementById('prize-icon-display');
+            const titleDisplay = document.getElementById('prize-title');
+            const rarityDisplay = document.getElementById('prize-rarity-display');
             
-            // Reset modal case
-            const modalCase = document.getElementById('modal-case');
-            modalCase.classList.remove('opened');
+            iconDisplay.textContent = prize.icon;
+            titleDisplay.textContent = prize.name;
+            
+            rarityDisplay.className = 'prize-rarity mb-4 inline-block rarity-' + prize.rarity;
+            rarityDisplay.textContent = {
+                'legendary': 'Легендарный',
+                'epic': 'Эпический',
+                'rare': 'Редкий',
+                'common': 'Обычный'
+            }[prize.rarity];
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Конфетти для редких призов
+            if (prize.rarity === 'legendary') {
+                createConfetti(100);
+                iconDisplay.classList.add('jackpot-prize');
+            } else if (prize.rarity === 'epic') {
+                createConfetti(50);
+                iconDisplay.classList.remove('jackpot-prize');
+            } else {
+                iconDisplay.classList.remove('jackpot-prize');
+            }
+        }
+
+        function closePrizeModal() {
+            const modal = document.getElementById('prize-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
 
         function renderClientPrizes() {
             const container = document.getElementById('prizes-list');
             
             if (appState.client.prizes.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-500 py-8">
-                        Пока нет выигранных призов. Откройте кейс!
-                    </div>
-                `;
+                container.innerHTML = '<div class="text-center text-slate-500 py-8">Пока нет выигранных призов. Откройте кейс!</div>';
                 return;
             }
 
             container.innerHTML = appState.client.prizes.slice().reverse().map(prize => `
-                <div class="prize-item flex items-center gap-3">
-                    <span class="text-2xl">${prize.icon}</span>
+                <div class="prize-item flex items-center gap-3 ${prize.rarity === 'legendary' ? 'jackpot' : ''}">
+                    <span class="text-3xl">${prize.icon}</span>
                     <div class="flex-1">
                         <div class="font-medium">${prize.name}</div>
-                        <div class="text-xs text-slate-500">${prize.wonAt}</div>
+                        <div class="flex items-center gap-2">
+                            <span class="prize-rarity rarity-${prize.rarity}">${
+                                {'legendary': 'Легендарный', 'epic': 'Эпический', 'rare': 'Редкий', 'common': 'Обычный'}[prize.rarity]
+                            }</span>
+                            <span class="text-xs text-slate-500">${prize.wonAt}</span>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
 
         // ==================== CONFETTI ====================
-        function createConfetti() {
+        function createConfetti(count) {
             const container = document.getElementById('confetti-container');
-            const colors = ['#f59e0b', '#10b981', '#06b6d4', '#ec4899', '#8b5cf6'];
+            const colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#10b981'];
             
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < count; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
                 confetti.style.cssText = `
                     position: fixed;
-                    width: 10px;
-                    height: 10px;
+                    width: ${Math.random() * 10 + 5}px;
+                    height: ${Math.random() * 10 + 5}px;
                     background: ${colors[Math.floor(Math.random() * colors.length)]};
                     left: ${Math.random() * 100}vw;
                     top: 100vh;
                     border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-                    animation: confetti 1.5s ease-out forwards;
                     animation-delay: ${Math.random() * 0.5}s;
                 `;
                 container.appendChild(confetti);
-                
-                setTimeout(() => confetti.remove(), 2000);
+                setTimeout(() => confetti.remove(), 2500);
             }
         }
 
@@ -1219,8 +1379,7 @@
             document.getElementById('demo-section').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Promo input formatting
-        document.addEventListener('DOMContentLoaded', () => {
+        function initPromoInput() {
             const promoInput = document.getElementById('promo-input');
             if (promoInput) {
                 promoInput.addEventListener('input', function(e) {
@@ -1231,7 +1390,7 @@
                     e.target.value = value;
                 });
             }
-        });
+        }
     </script>
 </body>
 </html>
